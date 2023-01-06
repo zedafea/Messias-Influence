@@ -154,7 +154,8 @@ data = data %>% mutate(segunda_onda =
 data = data %>% mutate(votos_2018_Bolsonaro_1_percentual = votos_2018_Bolsonaro_1_percentual * 100,
                    votos_2018_Bolsonaro_2_percentual = votos_2018_Bolsonaro_2_percentual * 100,
                    populacao_2017_percentagem_idosos = populacao_2017_percentagem_idosos * 100)
-
+data = data %>% mutate(votos_2018_Haddad_1_percentual = votos_2018_Haddad_1_percentual * 100,
+                       votos_2018_Haddad_2_percentual = votos_2018_Haddad_2_percentual * 100)
 # Threshold para retirarmos distritos de renda média e alta com IPVS maior do que a mediana
 df_ricos <- data %>%
   filter(log_renda >= 8.305727)
@@ -163,6 +164,14 @@ df_ricos_ig <- df_ricos %>%
 df_2 <- data %>%
   filter(log_renda < 8.305727)
 df_main <- rbind(df_2,df_ricos_ig)
+
+# Threshold para distritos com maiores diferenças de votos
+data <- data %>% 
+  mutate(quartil_votacao = case_when(votos_2018_Bolsonaro_1_percentual <= 36.06 ~ 1,
+                                     votos_2018_Bolsonaro_1_percentual > 36.06 & votos_2018_Bolsonaro_1_percentual <= 41.70 ~ 2,
+                                     votos_2018_Bolsonaro_1_percentual > 41.70 & votos_2018_Bolsonaro_1_percentual <= 46.27 ~ 3,
+                                     votos_2018_Bolsonaro_1_percentual > 46.27  ~ 4)) %>% 
+  filter(quartil_votacao == 2 | quartil_votacao == 3)
 
 ###########################################################################
 
@@ -246,8 +255,7 @@ model1c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual, data = d
 model2c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda, data = df_main)
 model3c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte, data = df_main)
 model4c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura, data = df_main)
-model5c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura + agua, data = df_main)
-model6c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura + agua +ipvs, data = df_main)
+model5c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura + agua +ipvs, data = df_main)
 
 stargazer(model1b,model2b,model3b,model4b,model5b,model6b,model1c,model2c,model3c,model4c,model5c,model6c,
           dep.var.caption = "Excedente de mortos até 2021",
@@ -270,6 +278,8 @@ model3b <- lm(excedente_60 ~ votos_2018_Bolsonaro_1_percentual + log_renda + tra
 model4b <- lm(excedente_60 ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura, data = data)
 model5b <- lm(excedente_60 ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura + agua, data = data)
 model6b <- lm(excedente_60 ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura +agua + ipvs, data = data)
+model7b <- lm(excedente_60 ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura +agua + ipvs + votos_2018_Haddad_1_percentual, data = data)
+
 
 model1c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual, data = data)
 model2c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda, data = data)
@@ -277,6 +287,8 @@ model3c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_ren
 model4c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura, data = data)
 model5c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura + agua, data = data)
 model6c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura + agua +ipvs, data = data)
+model7c <- lm(excedente_60_votante ~ votos_2018_Bolsonaro_1_percentual + log_renda + transporte + cobertura + agua +ipvs + votos_2018_Haddad_1_percentual, data = data)
+
 
 stargazer(model1,model2,model3,model4,model5,model6,model1a,model2a,model3a,model4a,model5a,model6a,
           dep.var.caption = "Excedente de mortos até 2021",
@@ -285,12 +297,12 @@ stargazer(model1,model2,model3,model4,model5,model6,model1a,model2a,model3a,mode
           notes.label = "Níveis de significância",
           title = 'Regressão 2',out = "regressao_exc_filtro.tex")
 
-stargazer(model1b,model2b,model3b,model4b,model5b,model6b,model1c,model2c,model3c,model4c,model5c,model6c,
+stargazer(model1b,model2b,model3b,model4b,model5b,model6b,model7b,model1c,model2c,model3c,model4c,model5c,model6c,model7c,
           dep.var.caption = "Excedente de mortos até 2021",
           dep.var.labels = c('0-60 anos','20-60 anos'),
-          covariate.labels = c("Votos","Renda","Mobilidade", "Cobertura", "Água", "IPVS","Constante"),
+          covariate.labels = c("Votos","Renda","Mobilidade", "Cobertura", "Água", "IPVS","Haddad","Constante"),
           notes.label = "Níveis de significância",
-          title = 'Regressão 3',out = "regressao_exc_filtro.tex")
+          title = 'Regressão 3',out = "regressao_exc_filtro_haddad_controle.html")
 
 
 ## ANTIGAS REGRESSOES DE EXCEDENTE
@@ -354,4 +366,120 @@ stargazer(model1,model2,model3,model4,model5,model6,
           covariate.labels = c("Votos no Bolsonaro","Log da Renda","IPVS","Constante"),
           notes.label = "Níveis de significância",
           title = 'Regressão 4',out = "regressao_aceleracao_ambos.tex")
+
+###########################################################################
+
+# Passo 6: Lidando com ideologia
+
+media_Aecio <- sum(data$votos_2014_Aecio_1_total)/sum(data$votos_2014_todos_1_total)
+media_Doria_2016 <- sum(data$votos_2016_Doria_1_total)/sum(data$votos_2016_todos_1_total)
+media_Doria_2018_1 <- sum(data$votos_2018_Doria_1_total)/sum(data$votos_2018_todos_1_total_gov)
+media_Doria_2018_2 <- sum(data$votos_2018_Doria_2_total)/sum(data$votos_2018_todos_2_total_gov)
+media_Bolsonaro <- sum(data$votos_2018_Bolsonaro_1_total)/sum(data$votos_2018_todos_1_total)
+
+data <- data %>%
+  mutate(dif_percentual_Aecio_2014 = data$votos_2014_Aecio_1_percentual - media_Aecio,
+         dif_percentual_Bolsonaro_2018 = data$votos_2018_Bolsonaro_1_percentual - media_Bolsonaro,
+         dif_percentual_Doria_2016 = data$votos_2016_Doria_1_percentual - media_Doria_2016,
+         dif_percentual_Doria_2018_1 = data$votos_2018_Doria_1_percentual - media_Doria_2018_1,
+         dif_percentual_Doria_2018_2 = data$votos_2018_Doria_2_percentual - media_Doria_2018_2)
+
+data['ideologia_2018_2014'] <- data$dif_percentual_Bolsonaro_2018 - data$dif_percentual_Aecio_2014*100  
+data['ideologia_2018_2016'] <- data$dif_percentual_Bolsonaro_2018 - data$dif_percentual_Doria_2016*100
+data['ideologia_2018_2018_Doria_1'] <- data$dif_percentual_Bolsonaro_2018 - data$dif_percentual_Doria_2018_1*100
+data['ideologia_2018_2018_Doria_2'] <- data$dif_percentual_Bolsonaro_2018 - data$dif_percentual_Doria_2018_2*100
+
+#Considerando todos os distritos
+
+#Aécio_2014
+model1b <- lm(excedente_60 ~ ideologia_2018_2014, data = data)
+model2b <- lm(excedente_60 ~ ideologia_2018_2014 + log_renda, data = data)
+model3b <- lm(excedente_60 ~ ideologia_2018_2014 + log_renda + transporte, data = data)
+model4b <- lm(excedente_60 ~ ideologia_2018_2014 + log_renda + transporte + cobertura, data = data)
+model5b <- lm(excedente_60 ~ ideologia_2018_2014 + log_renda + transporte + cobertura + agua, data = data)
+model6b <- lm(excedente_60 ~ ideologia_2018_2014 + log_renda + transporte + cobertura +agua + ipvs, data = data)
+
+model1c <- lm(excedente_60_votante ~ ideologia_2018_2014, data = data)
+model2c <- lm(excedente_60_votante ~ ideologia_2018_2014 + log_renda, data = data)
+model3c <- lm(excedente_60_votante ~ ideologia_2018_2014 + log_renda + transporte, data = data)
+model4c <- lm(excedente_60_votante ~ ideologia_2018_2014 + log_renda + transporte + cobertura, data = data)
+model5c <- lm(excedente_60_votante ~ ideologia_2018_2014 + log_renda + transporte + cobertura + agua, data = data)
+model6c <- lm(excedente_60_votante ~ ideologia_2018_2014 + log_renda + transporte + cobertura + agua +ipvs, data = data)
+
+stargazer(model1b,model6b,model1c,model6c,
+          dep.var.caption = "Excedente de mortos até 2021",
+          dep.var.labels = c('0-60 anos','20-60 anos'),
+          covariate.labels = c("Votos","Constante"),
+          omit = c('log_renda','transporte','cobertura','agua','ipvs'),
+          notes.label = "Níveis de significância",
+          title = 'Regressão 1',out = "regressao_exc_filtro_14_18.tex")
+
+#Dória_2016
+model1b <- lm(excedente_60 ~ ideologia_2018_2016, data = data)
+model2b <- lm(excedente_60 ~ ideologia_2018_2016 + log_renda, data = data)
+model3b <- lm(excedente_60 ~ ideologia_2018_2016 + log_renda + transporte, data = data)
+model4b <- lm(excedente_60 ~ ideologia_2018_2016 + log_renda + transporte + cobertura, data = data)
+model5b <- lm(excedente_60 ~ ideologia_2018_2016 + log_renda + transporte + cobertura + agua, data = data)
+model6b <- lm(excedente_60 ~ ideologia_2018_2016 + log_renda + transporte + cobertura +agua + ipvs, data = data)
+
+model1c <- lm(excedente_60_votante ~ ideologia_2018_2016, data = data)
+model2c <- lm(excedente_60_votante ~ ideologia_2018_2016 + log_renda, data = data)
+model3c <- lm(excedente_60_votante ~ ideologia_2018_2016 + log_renda + transporte, data = data)
+model4c <- lm(excedente_60_votante ~ ideologia_2018_2016 + log_renda + transporte + cobertura, data = data)
+model5c <- lm(excedente_60_votante ~ ideologia_2018_2016 + log_renda + transporte + cobertura + agua, data = data)
+model6c <- lm(excedente_60_votante ~ ideologia_2018_2016 + log_renda + transporte + cobertura + agua +ipvs, data = data)
+
+stargazer(model1b,model6b,model1c,model6c,
+          dep.var.caption = "Excedente de mortos até 2021",
+          dep.var.labels = c('0-60 anos','20-60 anos'),
+          covariate.labels = c("Votos","Constante"),
+          omit = c('log_renda','transporte','cobertura','agua','ipvs'),
+          notes.label = "Níveis de significância",
+          title = 'Regressão 2',out = "regressao_exc_filtro_16_18.tex")
+
+#Dória_2018_1º
+model1b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_1, data = data)
+model2b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_1 + log_renda, data = data)
+model3b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_1 + log_renda + transporte, data = data)
+model4b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_1 + log_renda + transporte + cobertura, data = data)
+model5b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_1 + log_renda + transporte + cobertura + agua, data = data)
+model6b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_1 + log_renda + transporte + cobertura +agua + ipvs, data = data)
+
+model1c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_1, data = data)
+model2c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_1 + log_renda, data = data)
+model3c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_1 + log_renda + transporte, data = data)
+model4c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_1 + log_renda + transporte + cobertura, data = data)
+model5c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_1 + log_renda + transporte + cobertura + agua, data = data)
+model6c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_1 + log_renda + transporte + cobertura + agua +ipvs, data = data)
+
+stargazer(model1b,model6b,model1c,model6c,
+          dep.var.caption = "Excedente de mortos até 2021",
+          dep.var.labels = c('0-60 anos','20-60 anos'),
+          covariate.labels = c("Votos","Constante"),
+          omit = c('log_renda','transporte','cobertura','agua','ipvs'),
+          notes.label = "Níveis de significância",
+          title = 'Regressão 3',out = "regressao_exc_filtro_18_1_18.tex")
+
+#Dória_2018_2º
+model1b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_2, data = data)
+model2b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_2 + log_renda, data = data)
+model3b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_2 + log_renda + transporte, data = data)
+model4b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_2 + log_renda + transporte + cobertura, data = data)
+model5b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_2 + log_renda + transporte + cobertura + agua, data = data)
+model6b <- lm(excedente_60 ~ ideologia_2018_2018_Doria_2 + log_renda + transporte + cobertura +agua + ipvs, data = data)
+
+model1c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_2, data = data)
+model2c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_2 + log_renda, data = data)
+model3c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_2 + log_renda + transporte, data = data)
+model4c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_2 + log_renda + transporte + cobertura, data = data)
+model5c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_2 + log_renda + transporte + cobertura + agua, data = data)
+model6c <- lm(excedente_60_votante ~ ideologia_2018_2018_Doria_2 + log_renda + transporte + cobertura + agua +ipvs, data = data)
+
+stargazer(model1b,model6b,model1c,model6c,
+          dep.var.caption = "Excedente de mortos até 2021",
+          dep.var.labels = c('0-60 anos','20-60 anos'),
+          covariate.labels = c("Votos","Constante"),
+          omit = c('log_renda','transporte','cobertura','agua','ipvs'),
+          notes.label = "Níveis de significância",
+          title = 'Regressão 4',out = "regressao_exc_filtro_18_2_18.tex")
 
