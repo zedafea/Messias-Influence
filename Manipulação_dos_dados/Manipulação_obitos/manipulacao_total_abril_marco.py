@@ -1,3 +1,5 @@
+import os 
+os.chdir(r'C:\Users\guilh\Documents\Messias-Influence\Manipulação_dos_dados\Manipulação_obitos')
 from manipulacao_ano_ano import create_df_ano_ano
 import pandas as pd
 
@@ -19,11 +21,22 @@ df_total = {}
 for i in la:
     if i != 2022:
         for j in ls:
-            print(i)
             df_aux0 = df_main.loc[:,f'obitos_{i}_total_Abril_{j[0]}_{j[1]}_anos':f'obitos_{i}_total_Dezembro_{j[0]}_{j[1]}_anos']
             df_aux1 = df_main.loc[:,f'obitos_{i+1}_total_Janeiro_{j[0]}_{j[1]}_anos':f'obitos_{i+1}_total_Março_{j[0]}_{j[1]}_anos']
             df_aux = pd.concat([df_aux0,df_aux1],axis=1)
             df_total[f'obitos_{i}/{i+1}_total_{j[0]}_{j[1]}_anos'] = df_aux.sum(axis=1)
+df_total = pd.DataFrame(df_total)  
 
-df_total = pd.DataFrame(df_total)           
+#Criação dos dados trimestrais
+df_total_trimestre = []
+aux_ = df_main.loc[:,df_main.columns[df_main.columns.str.contains('0_9_anos')]]
+aux__ = aux_.T.rolling(3).sum().T
+df_total_trimestre.append(aux__) 
+for z in ls[1:]:
+    aux_ = df_main.loc[:,df_main.columns[df_main.columns.str.contains(f'{z[0]}')&df_main.columns.str.contains(f'{z[1]}')]]
+    aux__ = aux_.T.rolling(3).sum().T
+    df_total_trimestre.append(aux__) 
+df_total_trimestre = pd.concat(df_total_trimestre,axis=1).dropna(axis=1)
+
 df_total.to_csv(r'C:\Users\guilh\Documents\Apoio_p_18_COVID19_\total_obitos_distrito_novo.csv')
+df_total_trimestre.to_csv(r'C:\Users\guilh\Documents\Apoio_p_18_COVID19_\total_obitos_distrito_trimestre.csv')
