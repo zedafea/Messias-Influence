@@ -7,7 +7,7 @@ df___ = pd.read_csv(r'C:\Users\guilh\Documents\Apoio_p_18_COVID19_\age_standardi
 
 
 ls = [[0,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,'inf']]
-
+    
 #%%
 #Excedente medio anual (2017-2020)
 df_total_anual = []
@@ -19,7 +19,7 @@ df_total_anual.append(aux_)
 
 for i in ls[1:]:
     print(i)
-    aux = df[df.columns[(df.columns.str.contains(f'{i[0]}'))]]
+    aux = df[df.columns[(df.columns.str.contains(f'{i[0]}'))&(df.columns.str.contains(f'{i[1]}'))]]
     aux[f'obitos_2017/2020_media_{i[0]}_{i[1]}_anos'] = aux.iloc[:,[0,1,2]].mean(axis=1)
     aux_ = aux.iloc[:-2,-3:]
     df_total_anual.append(aux_)
@@ -46,7 +46,7 @@ df_total_trimestral.append(pd.concat(ls_meses,axis=1))
     
 for i in ls[1:]:
     print(i)
-    ax = df_[df_.columns[(df_.columns.str.contains(f'{i[0]}'))]]
+    ax = df_[df_.columns[(df_.columns.str.contains(f'{i[0]}'))&(df_.columns.str.contains(f'{i[1]}'))]]
     ls_meses = []
     for j in meses:
         print(j)
@@ -57,6 +57,7 @@ for i in ls[1:]:
     df_total_trimestral.append(pd.concat(ls_meses,axis=1))
 df_total_trimestral = pd.concat(df_total_trimestral,axis=1)
 df_total_trimestral['distrito'] = df_['Distrito Admin residência'].iloc[:-2]
+df_total_trimestral = df_total_trimestral.iloc[:-2,]
 
 #%%
 #Excedente médio age_standardized (pop 2015)
@@ -64,14 +65,14 @@ df_total_anual_std_15 = []
 
 axl = df__[df__.columns[(df__.columns.str.contains('0_9_anos'))]]
 axl['obitos_2017/2020_media_0_9_anos'] = axl.iloc[:,[0,1,2]].mean(axis=1)
-axl_ = axl.iloc[:-2,-3:]
+axl_ = axl.iloc[:,-3:]
 df_total_anual_std_15.append(axl_)
 
 for i in ls[1:]:
     print(i)
-    axl = df__[df__.columns[(df__.columns.str.contains(f'{i[0]}'))]]
+    axl = df__[df__.columns[(df__.columns.str.contains(f'{i[0]}'))&(df__.columns.str.contains(f'{i[1]}'))]]
     axl[f'obitos_2017/2020_media_{i[0]}_{i[1]}_anos'] = axl.iloc[:,[0,1,2]].mean(axis=1)
-    axl_ = axl.iloc[:-2,-3:]
+    axl_ = axl.iloc[:,-3:]
     df_total_anual_std_15.append(axl_)
 
 df_total_anual_std_15 = pd.concat(df_total_anual_std_15,axis=1)
@@ -83,14 +84,14 @@ df_total_anual_std_20 = []
 
 axr = df___[df___.columns[(df___.columns.str.contains('0_9_anos'))]]
 axr['obitos_2017/2020_media_0_9_anos'] = axr.iloc[:,[0,1,2]].mean(axis=1)
-axr_ = axr.iloc[:-2,-3:]
+axr_ = axr.iloc[:,-3:]
 df_total_anual_std_20.append(axr_)
 
 for i in ls[1:]:
     print(i)
-    axr = df___[df___.columns[(df___.columns.str.contains(f'{i[0]}'))]]
+    axr = df___[df___.columns[(df___.columns.str.contains(f'{i[0]}'))&(df___.columns.str.contains(f'{i[1]}'))]]
     axr[f'obitos_2017/2020_media_{i[0]}_{i[1]}_anos'] = axr.iloc[:,[0,1,2]].mean(axis=1)
-    axr_ = axr.iloc[:-2,-3:]
+    axr_ = axr.iloc[:,-3:]
     df_total_anual_std_20.append(axr_)
 
 df_total_anual_std_20 = pd.concat(df_total_anual_std_20,axis=1)
