@@ -38,5 +38,15 @@ for z in ls[1:]:
     df_total_trimestre.append(aux__) 
 df_total_trimestre = pd.concat(df_total_trimestre,axis=1).dropna(axis=1)
 
+#Total por distrito e trimestre sem distinguir faixa etária
+meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+df_total_trimestre_todos = {}
+for c in la:
+    for b in meses:
+        aux_ = df_total_trimestre.loc[:,df_total_trimestre.columns[df_total_trimestre.columns.str.contains(f'{c}')&df_total_trimestre.columns.str.contains(f'{b}')]]
+        df_total_trimestre_todos[f'obitos_{c}_total_{b}_todos'] = aux_.sum(axis=1)
+df_total_trimestre_todos = pd.DataFrame.from_dict(df_total_trimestre_todos,orient='index').T
+
 df_total.to_csv(r'C:\Users\guilh\Documents\Apoio_p_18_COVID19_\total_obitos_distrito_novo.csv')
 df_total_trimestre.to_csv(r'C:\Users\guilh\Documents\Apoio_p_18_COVID19_\total_obitos_distrito_trimestre.csv')
+df_total_trimestre_todos.to_csv(r'C:\Users\guilh\Documents\Apoio_p_18_COVID19_\total_obitos_distrito_trimestre_todos.csv')
